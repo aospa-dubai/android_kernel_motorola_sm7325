@@ -1148,8 +1148,8 @@ static void __dwc3_prepare_one_trb(struct dwc3_ep *dep, struct dwc3_trb *trb,
 			trb->ctrl = DWC3_TRBCTL_ISOCHRONOUS;
 		}
 
-		/* always enable Interrupt on Missed ISOC */
-		trb->ctrl |= DWC3_TRB_CTRL_ISP_IMI;
+		if (!no_interrupt && !chain)
+			trb->ctrl |= DWC3_TRB_CTRL_ISP_IMI;
 		break;
 
 	case USB_ENDPOINT_XFER_BULK:
@@ -2014,8 +2014,8 @@ int __dwc3_gadget_ep_set_halt(struct dwc3_ep *dep, int value, int protocol)
 		if (!dep->gsi) {
 			dwc3_stop_active_transfer(dep, true, true);
 
-		if (!list_empty(&dep->started_list))
-			dep->flags |= DWC3_EP_DELAY_START;
+			if (!list_empty(&dep->started_list))
+				dep->flags |= DWC3_EP_DELAY_START;
 
 			if (dep->flags & DWC3_EP_END_TRANSFER_PENDING) {
 				dep->flags |= DWC3_EP_PENDING_CLEAR_STALL;
@@ -3294,6 +3294,10 @@ static int dwc3_gadget_ep_reclaim_completed_trb(struct dwc3_ep *dep,
 	if (event->status & DEPEVT_STATUS_SHORT && !chain)
 		return 1;
 
+	if ((trb->ctrl & DWC3_TRB_CTRL_ISP_IMI) &&
+	    DWC3_TRB_SIZE_TRBSTS(trb->size) == DWC3_TRBSTS_MISSED_ISOC)
+		return 1;
+
 	if ((trb->ctrl & DWC3_TRB_CTRL_IOC) ||
 	    (trb->ctrl & DWC3_TRB_CTRL_LST))
 		return 1;
@@ -3347,8 +3351,7 @@ static int dwc3_gadget_ep_cleanup_completed_request(struct dwc3_ep *dep,
 		struct dwc3_request *req, int status)
 {
 	struct dwc3 *dwc = dep->dwc;
-	int request_status;
-	int ret;
+	int ret, request_status;
 
 	/*
 	 * If the HWO is set, it implies the TRB is still being
