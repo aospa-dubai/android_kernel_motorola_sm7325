@@ -129,6 +129,7 @@ static int cam_isp_update_dual_config(
 	if (dual_config->num_ports > size_isp_out) {
 		CAM_ERR(CAM_ISP, "num_ports %d more than max_vfe_out_res %d",
 			dual_config->num_ports, size_isp_out);
+		cam_mem_put_cpu_buf(cmd_desc->mem_handle);
 		return -EINVAL;
 	}
 
@@ -283,6 +284,10 @@ int cam_isp_add_command_buffers(
 		split_id, prepare->packet->num_cmd_buf);
 
 	for (i = 0; i < prepare->packet->num_cmd_buf; i++) {
+		rc = cam_packet_util_validate_cmd_desc(&cmd_desc[i]);
+		if (rc)
+			return rc;
+
 		num_ent = prepare->num_hw_update_entries;
 		if (!cmd_desc[i].length)
 			continue;
