@@ -1511,7 +1511,7 @@ int fdt_nop_node(void *fdt, int nodeoffset);
  * fdt_create_with_flags() begins the process of creating a new fdt with
  * the sequential write interface.
  *
- * fdt creation process must end with fdt_finished() to produce a valid fdt.
+ * fdt creation process must end with fdt_finish() to produce a valid fdt.
  *
  * returns:
  *	0, on success
@@ -2029,7 +2029,7 @@ static inline int fdt_appendprop_cell(void *fdt, int nodeoffset,
  * address and size) to the value of the named property in the given
  * node, or creates a new property with that value if it does not
  * already exist.
- * If "name" is not specified, a default "reg" is used.
+ *
  * Cell sizes are determined by parent's #address-cells and #size-cells.
  *
  * This function may insert data into the blob, and will therefore
