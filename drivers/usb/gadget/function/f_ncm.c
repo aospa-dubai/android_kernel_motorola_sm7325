@@ -1435,7 +1435,7 @@ static int ncm_bind(struct usb_configuration *c, struct usb_function *f)
 	struct usb_composite_dev *cdev = c->cdev;
 	struct f_ncm		*ncm = func_to_ncm(f);
 	struct usb_string	*us;
-	int			status;
+	int			status = 0;
 	struct usb_ep		*ep;
 	struct f_ncm_opts	*ncm_opts;
 
@@ -1462,8 +1462,7 @@ static int ncm_bind(struct usb_configuration *c, struct usb_function *f)
 	 */
 	if (!ncm_opts->bound) {
 		mutex_lock(&ncm_opts->lock);
-		/* MOTODESK-3077 Use ncm interface name. suzh1 2021-04-03 */
-		ncm_opts->net = gether_setup_name_default("ncm");
+		ncm_opts->net = gether_setup_default();
 		if (IS_ERR(ncm_opts->net)) {
 			status = PTR_ERR(ncm_opts->net);
 			mutex_unlock(&ncm_opts->lock);
